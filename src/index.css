@@ -1,0 +1,373 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Cyberpunk Security Theme - Matrix Green + Deep Black */
+    --background: 220 13% 8%;        /* #0D1117 Deep Dark */
+    --foreground: 144 100% 88%;      /* #E0FFE0 Matrix Light Green */
+    
+    --card: 220 13% 10%;             /* #161B22 Card Dark */
+    --card-foreground: 144 100% 88%;
+    
+    --border: 144 60% 18%;           /* #1A4D1A Matrix Dark Green Border */
+    
+    --primary: 144 100% 50%;         /* #00FF41 Matrix Green */
+    --primary-foreground: 220 13% 8%;
+    
+    --danger: 0 84% 60%;             /* #F03E3E Danger Red */
+    --danger-foreground: 0 0% 100%;
+    
+    --success: 144 100% 50%;         /* #00FF41 Success Green */
+    --success-foreground: 220 13% 8%;
+    
+    --muted: 220 13% 15%;            /* #1F2937 Muted */
+    --muted-foreground: 144 20% 55%; /* #7A9F7A Muted Text */
+    
+    --accent: 280 100% 70%;          /* #CC00FF Magenta Accent */
+    --accent-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%;           /* #F59E0B Warning Orange */
+    --warning-foreground: 220 13% 8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    overflow-x: hidden;
+    position: relative;
+  }
+  
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(90deg, rgba(0, 255, 65, 0.03) 1px, transparent 1px),
+      linear-gradient(rgba(0, 255, 65, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: inherit;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  
+  code, pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+}
+
+/* 扫描线效果 */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+.scanline {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(transparent, rgba(0, 255, 65, 0.4), transparent);
+  animation: scanline 8s linear infinite;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* 矩阵色萤光效果 */
+.glow-green {
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.8),
+               0 0 20px rgba(0, 255, 65, 0.5),
+               0 0 30px rgba(0, 255, 65, 0.3);
+}
+
+.glow-red {
+  text-shadow: 0 0 10px rgba(240, 62, 62, 0.8),
+               0 0 20px rgba(240, 62, 62, 0.5);
+}
+
+/* 按钮样式 */
+.btn {
+  @apply inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold uppercase tracking-wider text-sm;
+  @apply transition-all duration-300 shadow-lg;
+  @apply hover:scale-105 active:scale-95;
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+
+.btn:hover::before {
+  transform: translateX(100%);
+}
+
+.btn-danger {
+  @apply bg-danger/90 text-danger-foreground border-danger;
+  box-shadow: 0 0 20px rgba(240, 62, 62, 0.4),
+              inset 0 0 20px rgba(240, 62, 62, 0.1);
+}
+
+.btn-danger:hover {
+  @apply bg-danger;
+  box-shadow: 0 0 30px rgba(240, 62, 62, 0.6),
+              0 0 60px rgba(240, 62, 62, 0.3),
+              inset 0 0 30px rgba(240, 62, 62, 0.2);
+}
+
+.btn-success {
+  @apply bg-success/90 text-success-foreground border-success;
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.4),
+              inset 0 0 20px rgba(0, 255, 65, 0.1);
+}
+
+.btn-success:hover {
+  @apply bg-success;
+  box-shadow: 0 0 30px rgba(0, 255, 65, 0.6),
+              0 0 60px rgba(0, 255, 65, 0.3),
+              inset 0 0 30px rgba(0, 255, 65, 0.2);
+}
+
+.btn-primary {
+  @apply bg-primary text-primary-foreground border-primary;
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
+}
+
+.btn-ghost {
+  @apply bg-transparent text-muted-foreground border-border;
+  @apply hover:bg-muted hover:text-foreground hover:border-primary/50;
+}
+
+/* 输入框样式 */
+.input {
+  @apply w-full px-4 py-3 bg-card/50 border-2 border-border rounded-lg;
+  @apply text-foreground placeholder:text-muted-foreground;
+  @apply focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/30;
+  @apply transition-all duration-200;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+  font-family: inherit;
+}
+
+.input:focus {
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5),
+              0 0 20px rgba(0, 255, 65, 0.3);
+}
+
+/* 卡片样式 */
+.card {
+  @apply bg-card/80 border-2 border-border rounded-xl p-6;
+  @apply shadow-2xl backdrop-blur-sm;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6),
+              inset 0 0 40px rgba(0, 255, 65, 0.02);
+  position: relative;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(0, 255, 65, 0.2), transparent 40%, rgba(0, 255, 65, 0.1) 100%);
+  z-index: -1;
+  opacity: 0.5;
+}
+
+/* 记录项样式 */
+.record-item {
+  @apply flex items-start gap-4 p-4 bg-background/60 rounded-lg;
+  @apply border-2 border-border/50 hover:border-primary/60;
+  @apply transition-all duration-300;
+  position: relative;
+  backdrop-filter: blur(8px);
+}
+
+.record-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, transparent, hsl(var(--primary)), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: 0 4px 4px 0;
+}
+
+.record-item:hover::before {
+  opacity: 1;
+}
+
+.record-item:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+}
+
+/* 状态标签 */
+.badge {
+  @apply px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+  @apply border-2;
+  letter-spacing: 0.05em;
+}
+
+.badge-danger {
+  @apply bg-danger/20 text-danger border-danger/60;
+  box-shadow: 0 0 15px rgba(240, 62, 62, 0.3);
+  animation: pulse-danger 2s ease-in-out infinite;
+}
+
+.badge-success {
+  @apply bg-success/20 text-success border-success/60;
+  box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+}
+
+@keyframes pulse-danger {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(240, 62, 62, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(240, 62, 62, 0.6);
+  }
+}
+
+/* 模态框背景 */
+.modal-overlay {
+  @apply fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  @apply bg-card/95 border-2 border-primary/40 rounded-xl p-6 w-full max-w-md mx-4;
+  @apply backdrop-blur-xl;
+  box-shadow: 0 0 60px rgba(0, 255, 65, 0.4),
+              inset 0 0 40px rgba(0, 255, 65, 0.05);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 脉冲动画 */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(0, 255, 65, 0.7);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary));
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+  border: 2px solid hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.8);
+}
+
+/* 响应式动画减少 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .scanline {
+    display: none;
+  }
+}
+
+/* 侧边栏滑动动画 */
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: transform 0.3s ease-out;
+}
+
+.slide-left-enter-from {
+  transform: translateX(100%);
+}
+
+.slide-left-leave-to {
+  transform: translateX(100%);
+}
+
+/* 遮罩淡入淡出 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Toast 下拉动画 */
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-down-enter-from {
+  transform: translate(-50%, -100%);
+  opacity: 0;
+}
+
+.slide-down-leave-to {
+  transform: translate(-50%, -20px);
+  opacity: 0;
+}

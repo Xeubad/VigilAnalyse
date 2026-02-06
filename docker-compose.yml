@@ -7,5 +7,5 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - D:\\Program IT\\docker_data\\VigilAnalyse_data:/app/data
+      - {物理机存放路径}:/app/data
     restart: always

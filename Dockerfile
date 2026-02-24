@@ -1,5 +1,5 @@
 # 第一阶段：构建前端
-FROM registry.cn-wulanchabu.aliyuncs.com/xpled/node:18-alpine as build-stage
+FROM node:18-alpine as build-stage
 WORKDIR /app
 COPY package*.json ./
 RUN npm install

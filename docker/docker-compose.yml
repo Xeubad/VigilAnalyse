@@ -9,7 +9,11 @@ services:
     ports:
       - "3001:3001"
     volumes:
+<<<<<<< HEAD:docker/docker-compose.yml
       - vigil-data:/app/data
+=======
+      - {物理机存放路径}:/app/data
+>>>>>>> 829e7d516dea7edd349e784e9627d3676cb68adf:docker-compose.yml
     restart: always
 
 volumes:

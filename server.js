@@ -20,10 +20,28 @@ app.use(express.static(path.join(__dirname, 'dist')));
 // 确保数据目录存在
 fs.ensureDirSync(DATA_DIR);
 
+// 校验日期格式（YYYY-MM-DD）
+function isValidDate(str) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(str);
+}
+
+// 安全解析文件路径，防止路径穿越
+function safeFilePath(date) {
+  const filePath = path.resolve(DATA_DIR, `records_${date}.json`);
+  if (!filePath.startsWith(DATA_DIR)) return null;
+  return filePath;
+}
+
 
 // 获取月度汇总数据（优化性能）
 app.get('/api/records/summary', async (req, res) => {
   const { year, month } = req.query;
+
+  // 校验 year 和 month
+  if (!/^\d{4}$/.test(year) || !/^(1[0-2]|[1-9])$/.test(month)) {
+    return res.status(400).json({ error: '参数格式错误' });
+  }
+
   const summary = {};
   
   try {
@@ -47,7 +65,15 @@ app.get('/api/records/summary', async (req, res) => {
 // 获取指定日期的记录
 app.get('/api/records', async (req, res) => {
   const { date } = req.query;
-  const filePath = path.join(DATA_DIR, `records_${date}.json`);
+
+  if (!date || !isValidDate(date)) {
+    return res.status(400).json({ error: '日期格式错误，需为 YYYY-MM-DD' });
+  }
+
+  const filePath = safeFilePath(date);
+  if (!filePath) {
+    return res.status(400).json({ error: '非法路径' });
+  }
   
   try {
     if (await fs.pathExists(filePath)) {
@@ -64,7 +90,18 @@ app.get('/api/records', async (req, res) => {
 // 保存指定日期的记录
 app.post('/api/records', async (req, res) => {
   const { date, records } = req.body;
-  const filePath = path.join(DATA_DIR, `records_${date}.json`);
+
+  if (!date || !isValidDate(date)) {
+    return res.status(400).json({ error: '日期格式错误，需为 YYYY-MM-DD' });
+  }
+  if (!Array.isArray(records)) {
+    return res.status(400).json({ error: 'records 必须是数组' });
+  }
+
+  const filePath = safeFilePath(date);
+  if (!filePath) {
+    return res.status(400).json({ error: '非法路径' });
+  }
   const tempPath = `${filePath}.tmp`;
   
   try {

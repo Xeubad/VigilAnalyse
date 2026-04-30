@@ -2,10 +2,15 @@ version: '3.8'
 
 services:
   vigil-analyse:
-    build: .
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
     container_name: vigil-analyse
     ports:
       - "3001:3001"
     volumes:
-      - D:\\Program IT\\docker_data\\VigilAnalyse_data:/app/data
+      - vigil-data:/app/data
     restart: always
+
+volumes:
+  vigil-data:

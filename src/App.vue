@@ -5,6 +5,7 @@ import {
   loadRecords,
   loadMonthSummary,
   saveRecords,
+  sanitizeImported,
   exportToJSON,
   generateId,
   getTodayString,
@@ -122,7 +123,10 @@ const quickAddRecord = async (type: 'false_positive' | 'threat') => {
 
   const currentRecords = await loadRecords(targetDate)
   const updatedRecords = [newRecord, ...currentRecords]
-  await saveRecords(updatedRecords, targetDate)
+  if (!(await saveRecords(updatedRecords, targetDate))) {
+    showToast('保存失败，请检查后端服务', 'error')
+    return
+  }
   records.value = updatedRecords
   updateCalendar()
   showToast(type === 'threat' ? `${targetDate} 威胁事件已补录` : `${targetDate} 误报已补录`)
@@ -130,15 +134,19 @@ const quickAddRecord = async (type: 'false_positive' | 'threat') => {
 
 // 删除记录
 const handleDelete = async (id: string) => {
-  records.value = records.value.filter((r: SecurityRecord) => r.id !== id)
-  await saveRecords(records.value, viewDate.value)
+  const updated = records.value.filter((r: SecurityRecord) => r.id !== id)
+  if (!(await saveRecords(updated, viewDate.value))) {
+    showToast('删除失败，请检查后端服务', 'error')
+    return
+  }
+  records.value = updated
   updateCalendar()
   showToast('记录已删除')
 }
 
 // 转换记录类型
 const handleToggleType = async (id: string) => {
-  records.value = records.value.map((r: SecurityRecord) => {
+  const updated: SecurityRecord[] = records.value.map((r: SecurityRecord) => {
     if (r.id === id) {
       const newType = r.type === 'threat' ? 'false_positive' : 'threat'
       return {
@@ -150,7 +158,11 @@ const handleToggleType = async (id: string) => {
     }
     return r
   })
-  await saveRecords(records.value, viewDate.value)
+  if (!(await saveRecords(updated, viewDate.value))) {
+    showToast('保存失败，请检查后端服务', 'error')
+    return
+  }
+  records.value = updated
   updateCalendar()
   showToast('类型转换成功')
 }
@@ -158,7 +170,7 @@ const handleToggleType = async (id: string) => {
 // 一键对调全天记录类型
 const handleBulkSwap = async () => {
   if (records.value.length === 0) return
-  records.value = records.value.map((r: SecurityRecord) => {
+  const updated: SecurityRecord[] = records.value.map((r: SecurityRecord) => {
     const newType = r.type === 'threat' ? 'false_positive' : 'threat'
     return {
       ...r,
@@ -167,7 +179,11 @@ const handleBulkSwap = async () => {
       severity: newType === 'threat' ? (r.severity || 'medium') : undefined,
     }
   })
-  await saveRecords(records.value, viewDate.value)
+  if (!(await saveRecords(updated, viewDate.value))) {
+    showToast('保存失败，请检查后端服务', 'error')
+    return
+  }
+  records.value = updated
   updateCalendar()
   showToast('当日所有类型已对调')
 }
@@ -191,14 +207,17 @@ const handleImport = (e: Event) => {
   const reader = new FileReader()
   reader.onload = async (event) => {
     try {
-      const imported = JSON.parse(event.target?.result as string)
-      if (Array.isArray(imported)) {
+      const imported = sanitizeImported(JSON.parse(event.target?.result as string))
+      if (imported) {
+        if (!(await saveRecords(imported, viewDate.value))) {
+          showToast('保存失败，请检查后端服务', 'error')
+          return
+        }
         records.value = imported
-        await saveRecords(imported, viewDate.value)
         updateCalendar()
         showToast(`成功导入 ${imported.length} 条记录`)
       } else {
-        showToast('文件格式错误', 'error')
+        showToast('文件格式错误：记录缺少必要字段或 type 非法', 'error')
       }
     } catch {
       showToast('导入失败,请检查文件格式', 'error')
@@ -227,7 +246,10 @@ const clearDayRecords = async () => {
 }
 
 const confirmClear = async () => {
-  await saveRecords([], viewDate.value)
+  if (!(await saveRecords([], viewDate.value))) {
+    showToast('清除失败，请检查后端服务', 'error')
+    return
+  }
   records.value = []
   updateCalendar()
   showClearConfirm.value = false

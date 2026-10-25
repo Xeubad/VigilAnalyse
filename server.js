@@ -1,18 +1,35 @@
 import express from 'express';
 import fs from 'fs-extra';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import cors from 'cors';
+import { validateRecord } from './shared/record-schema.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3001;
-const DATA_DIR = path.join(__dirname, 'data');
+const PORT = process.env.PORT || 3001;
+const AUTH_TOKEN = process.env.AUTH_TOKEN;
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 
-app.use(cors());
+// 开发环境前后端不同源需要 CORS；生产环境前后端同域，不再放开跨域
+if (process.env.NODE_ENV !== 'production') {
+  app.use(cors());
+}
 app.use(express.json());
+
+// 最小鉴权：设置 AUTH_TOKEN 后，所有 /api 请求需携带 Authorization: Bearer <token>
+// 注意：SPA 场景下前端 token 会打包进静态资源，只能拦截扫描器和跨域写屟，
+// 面向公网的强保护请用 Nginx Basic Auth 或 VPN/内网限制
+if (AUTH_TOKEN) {
+  app.use('/api', (req, res, next) => {
+    if (req.get('Authorization') === `Bearer ${AUTH_TOKEN}`) return next();
+    res.status(401).json({ error: '未授权' });
+  });
+} else if (process.env.NODE_ENV === 'production') {
+  console.warn('[安全警告] 生产环境未设置 AUTH_TOKEN，API 处于无鉴权状态');
+}
 
 // 静态资源托管：将前端编译后的 dist 目录公开
 app.use(express.static(path.join(__dirname, 'dist')));
@@ -28,7 +45,7 @@ function isValidDate(str) {
 // 安全解析文件路径，防止路径穿越
 function safeFilePath(date) {
   const filePath = path.resolve(DATA_DIR, `records_${date}.json`);
-  if (!filePath.startsWith(DATA_DIR)) return null;
+  if (!filePath.startsWith(DATA_DIR + path.sep)) return null;
   return filePath;
 }
 
@@ -97,16 +114,24 @@ app.post('/api/records', async (req, res) => {
   if (!Array.isArray(records)) {
     return res.status(400).json({ error: 'records 必须是数组' });
   }
+  const firstInvalid = records.find((r) => validateRecord(r) !== null);
+  if (firstInvalid !== undefined) {
+    return res.status(400).json({ error: `记录校验失败：${validateRecord(firstInvalid)}` });
+  }
 
   const filePath = safeFilePath(date);
   if (!filePath) {
     return res.status(400).json({ error: '非法路径' });
   }
   const tempPath = `${filePath}.tmp`;
-  
+  const backupPath = `${filePath}.bak`;
+
   try {
-    // 使用原子写入：先写临时文件，再重命名
+    // 使用原子写入：先写临时文件，覆盖前把旧文件轮转为 .bak，再重命名
     await fs.writeJson(tempPath, records, { spaces: 2 });
+    if (await fs.pathExists(filePath)) {
+      await fs.copy(filePath, backupPath, { overwrite: true });
+    }
     await fs.move(tempPath, filePath, { overwrite: true });
     res.json({ success: true });
   } catch (err) {
@@ -120,6 +145,23 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`数据存储服务运行在: http://localhost:${PORT}`);
+// 统一错误处理：JSON 解析失败返回 400，其余返回 500
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.parse.failed' || err instanceof SyntaxError) {
+    return res.status(400).json({ error: '请求体 JSON 格式错误' });
+  }
+  console.error('服务器错误:', err);
+  res.status(500).json({ error: '服务器内部错误' });
 });
+
+// 作为主模块运行时才监听端口，被测试导入时只导出 app
+const isDirectRun = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isDirectRun) {
+  app.listen(PORT, () => {
+    console.log(`数据存储服务运行在: http://localhost:${PORT}`);
+  });
+}
+
+export { app };

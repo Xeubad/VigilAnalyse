@@ -9,12 +9,11 @@ services:
     ports:
       - "3001:3001"
     volumes:
-<<<<<<< HEAD:docker/docker-compose.yml
       - vigil-data:/app/data
-=======
-      - {物理机存放路径}:/app/data
->>>>>>> 829e7d516dea7edd349e784e9627d3676cb68adf:docker-compose.yml
     restart: always
+    # 生产环境务必设置 AUTH_TOKEN，并在前端 .env.production 设置相同的 VITE_AUTH_TOKEN
+    # environment:
+    #   - AUTH_TOKEN=change-me-to-a-long-random-string
 
 volumes:
   vigil-data:

@@ -1,9 +1,5 @@
 # 第一阶段：构建前端
-<<<<<<< HEAD:docker/Dockerfile
-FROM registry.cn-wulanchabu.aliyuncs.com/xpled/node:18-alpine AS build-stage
-=======
-FROM node:18-alpine as build-stage
->>>>>>> 829e7d516dea7edd349e784e9627d3676cb68adf:Dockerfile
+FROM node:18-alpine AS build-stage
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -11,7 +7,7 @@ COPY . .
 RUN npm run build
 
 # 第二阶段：运行 Node 后端服务
-FROM registry.cn-wulanchabu.aliyuncs.com/xpled/node:18-alpine
+FROM node:18-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm install --production

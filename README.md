@@ -143,21 +143,32 @@ server {
 - `VITE_API_BASE`: API基础路径
   - 开发环境: `http://localhost:3001/api/records`
   - 生产环境: `/api/records`
+- `VITE_AUTH_TOKEN`（可选，前端）: 与后端 `AUTH_TOKEN` 配对，设置后所有 API 请求携带 `Authorization: Bearer <token>`
+- `AUTH_TOKEN`（可选，后端）: 设置后所有 `/api` 请求需要匹配的 Bearer token，未设置则 API 无鉴权（生产环境未设置会打印安全警告）
+- `PORT`（可选，后端）: 服务监听端口，默认 `3001`
 
 根据部署环境修改 `.env` 或 `.env.production` 文件。
+
+> 安全提示：SPA 场景下前端 token 会打包进静态资源，只能拦截扫描器和跨域写入。
+> 面向公网部署时，请配合 Nginx Basic Auth、VPN 或内网限制使用。
 
 ## API接口说明
 
 - `GET /api/records/summary`: 获取月度汇总数据
 - `GET /api/records`: 获取指定日期的记录
-- `POST /api/records`: 保存指定日期的记录
+- `POST /api/records`: 保存指定日期的记录（逐字段校验，非法字段返回 400）
 - `*`: 前端路由处理
 
 ## 数据存储
 
 - 数据文件存储在 `data/` 目录
 - 按日期格式命名: `records_YYYY-MM-DD.json`
+- 每次覆盖保存前，旧文件会自动轮转为 `records_YYYY-MM-DD.json.bak`（保留上一版，可用于回滚）
 - Docker部署时会挂载宿主机目录到容器 `/app/data`
+
+## 记录结构契约
+
+记录字段定义的唯一事实来源是 `shared/record-schema.mjs`，后端校验（server.js）和前端导入校验（src/utils/storage.ts）都从这里取规则。修改字段时只改这一处。
 
 ## 项目特性
 
@@ -194,6 +205,9 @@ server {
 ## 维护命令
 
 ```bash
+# 运行接口测试（自动使用临时数据目录，不影响真实 data/）
+npm test
+
 # 预览构建结果
 npm run preview
 
